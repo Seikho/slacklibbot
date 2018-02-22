@@ -19,17 +19,20 @@ export function setup<TConfig extends {}>(config: TConfig & Partial<SetupConfig>
   }
 
   setupCalled = true
-  const accessors = configure<TConfig>()
+  const { getter, setter } = configure<TConfig>()
 
   const initialConfig = { ...defaultConfig, ...(config as any) }
 
   // This is async, but we need to return the mutators synchronously
   initialiseConfig(initialConfig)
 
-  _getter = accessors.getter as any
-  _setter = accessors.setter as any
+  _getter = getter as any
+  _setter = setter as any
 
-  return accessors
+  return {
+    getConfig: getter,
+    setConfig: setter
+  }
 }
 
 export function getConfig() {
