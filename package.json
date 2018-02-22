@@ -1,0 +1,24 @@
+{
+  "name": "slacklibbot",
+  "version": "0.1.0",
+  "description": "Slack Bot framework",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rimraf src/**/*.js types/**/*.dts",
+    "build": "tsc"
+  },
+  "typings": "types/index.d.ts",
+  "keywords": ["slack", "bot", "framework", "typescript"],
+  "author": "Carl Winkler",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^9.4.6",
+    "rimraf": "^2.6.2",
+    "typescript": "^2.7.2"
+  },
+  "dependencies": {
+    "slacklib": "^1.0.4",
+    "webscaledb": "^0.1.6"
+  }
+}
