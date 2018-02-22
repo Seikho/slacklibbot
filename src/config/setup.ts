@@ -1,8 +1,9 @@
 import * as db from 'webscaledb'
 import * as path from 'path'
 import * as fs from 'fs'
+import * as process from 'process'
 
-const DB_NAME = path.join(__dirname, '..', 'database', 'config.json')
+const DB_NAME = path.join(process.cwd(), 'database', 'config.json')
 
 export interface DefaultParams {
   defaultParams: {
@@ -12,7 +13,7 @@ export interface DefaultParams {
   }
 }
 
-export interface BaseConfig {
+export interface BaseConfig extends DefaultParams {
   token: string
 
   name: string
@@ -22,8 +23,8 @@ export interface BaseConfig {
 
   debug: boolean
   log: boolean
-  defaultParams: any
 }
+
 export function configure<TConfig>() {
   return {
     getter: getConfig<TConfig>(),
@@ -32,7 +33,7 @@ export function configure<TConfig>() {
 }
 
 function getConfig<TConfig>() {
-  const getter = (): TConfig & BaseConfig & DefaultParams => {
+  const getter = (): TConfig & BaseConfig => {
     const raw = db.get()
     const config = parseConfig<TConfig & BaseConfig>(raw)
     return config
@@ -75,7 +76,7 @@ export async function initialiseConfig(config: any) {
   } catch (ex) {
     fs.writeFileSync(
       DB_NAME,
-      JSON.stringify({ token: process.env.SLACK_TOKEN || '', ...defaultConfig }, null, 2)
+      JSON.stringify({ token: process.env.SLACK_TOKEN || '', ...defaultConfig, ...config }, null, 2)
     )
   }
 
