@@ -22,7 +22,7 @@ interface DefaultConfig {
 }
 ```
 
-### configure
+### setup
 This returns an object with the getter and setter functions used to control your configuration.
 
 ```ts
@@ -34,11 +34,11 @@ interface Configuration {
 configure<YourConfig>(config: YourConfig & Partial<DefaultConfig>): Promise<Configuration>
 
 /** ./config.ts */
-import { configure } from 'slacklibbot'
+import { setup } from 'slacklibbot'
 
 
 // E.g.
-export const config = configure({
+export const config = setup({
   token: 'xoxb-1234-abc',
   myKey: 42,
   name: 'My Bot Name'
