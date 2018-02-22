@@ -7,6 +7,21 @@ A Slack bot framework written in TypeScript
 > npm install slacklibbot --save
 ```
 
+## Example
+```ts
+import { start, setup } from 'slacklibbot'
+
+const bot = setup({ name: 'Bot' })
+
+bot.register('my-command', 'Description', async (bot, msg, cfg, params) => {
+  const user = bot.users.find(user => user.id === msg.user)
+  await bot.postMessage({ channel: bot.channel, text: `Msg recvd: ${params.join(' ')}`, ...cfg.defaultParams })
+  console.log('Message received from ', user!.name)
+})
+
+start()
+```
+
 ## Configuration API
 
 ### Configuration Defaults
@@ -30,20 +45,26 @@ This returns an object with the getter and setter functions used to control your
 interface Configuration {
   setConfig: SetConfig // Async function to update your configuration
   getConfig: GetConfig // Sync function to retrieve your configuration
+  register: RegisterFunction
 }
-configure<YourConfig>(config: YourConfig & Partial<DefaultConfig>): Promise<Configuration>
+
+// privateKeys are keys that cannot be retrieved using @bot get [key]
+// If you have passwords or tokens in your configuration, add those configuration keys to the privateKeys array when setting up
+configure<YourConfig>(config: YourConfig & Partial<DefaultConfig>, privateKeys: string[]): Promise<Configuration>
 
 /** ./config.ts */
 import { setup } from 'slacklibbot'
 
 
 // E.g.
-export const config = setup({
+const { getConfig, setConfig, register } = setup({
   token: 'xoxb-1234-abc',
   myKey: 42,
   name: 'My Bot Name'
   // plus any overrides of the DefaultConfig
 })
+
+export { getConfig, setConfig, register }
 ```
 
 
@@ -64,7 +85,7 @@ interface DefaultParams {
 function getConfig(): YourConfig & DefaultConfig & DefaultParams
 
 /** ./my-module.ts (Sample module in your code) */
-import { config } from './config'
+import { getConfig } from './config'
 const myConfig = config.getConfig()
 ```
 
@@ -74,14 +95,14 @@ const myConfig = config.getConfig()
 async function setConfig(key: keyof YourConfig & DefaultConfig, value: any): Promise<YourConfig & DefaultConfig>
 
 /** ./another-module.ts (Sample module in your code) */
-import { config } from './config'
+import { setConfig } from './config'
 
 async function doThing() {
   // Override a default
-  await config.setConfig('emoji', ':thumbs_up:')
+  await setConfig('emoji', ':thumbs_up:')
 
   // Set your own keys
-  await config.setConfig('myKey', { foo: 'bar' })
+  await setConfig('myKey', { foo: 'bar' })
 }
 ```
 
@@ -118,7 +139,7 @@ type RegisterCallback = (bot: SlackClient, message: Chat.Message, config: Config
 function register(command: string, description: string, callback: RegisterCallback)
 
 // Example
-import { register } from 'slacklibbot'
+import { register } from './config'
 
 register('my-command', 'This will appear when help is caled', (bot, msg, cfg, params) => {
   bot.postMessage({
@@ -146,7 +167,8 @@ register('my-command', 'My command description', (bot, msg, cfg) => {
   const msgCfg = { channel: bot.channel, ...cfg.defaultParams }
   await bot.postMessage({ ...msgCfg, text: 'Please respond:' })
 
-  const response = await readMessage(bot, msg.user, 10000)
+  const user = bot.users.find(user => user.id === msg.user)
+  const response = await readMessage(bot, user, 10000)
   await bot.postMessage({ ...msgCfg, text: `Thanks for your response: ${response}` })
 })
 

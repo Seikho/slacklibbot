@@ -1,19 +1,30 @@
 import { getConfig, Config } from '../config'
 import { SlackClient, Chat } from 'slacklib'
 
-// Register the built-in config commands
-import './config'
-import './help'
-
-export type CommandListener = {
+export interface CommandListener<TConfig> {
   desc: string
-  callback: (bot: SlackClient, message: Chat.Message, config: Config, params: string[]) => void
+  callback: Callback<TConfig>
 }
 
-const listeners: { [command: string]: CommandListener } = {}
+export type Callback<T> = (
+  bot: SlackClient,
+  msg: Chat.Message,
+  config: T & Config,
+  params: string[]
+) => void
 
-export function register(command: string, desc: string, callback: CommandListener['callback']) {
-  listeners[command] = { desc, callback }
+const listeners: { [command: string]: CommandListener<any> } = {}
+
+export function toRegister<TConfig>() {
+  const registerFn = (command: string, description: string, callback: Callback<TConfig>) => {
+    internalRegister(command, description, callback as any)
+  }
+
+  return registerFn
+}
+
+export function internalRegister(command: string, description: string, callback: Callback<{}>) {
+  listeners[command] = { desc: description, callback }
 }
 
 export async function dispatch(bot: SlackClient, msg: Chat.Message, text: string) {

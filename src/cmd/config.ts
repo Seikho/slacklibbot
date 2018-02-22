@@ -1,5 +1,5 @@
-import { register } from './'
-import { getConfig, setConfig } from '../config'
+import { getConfig, setConfig, getPrivateConfigKeyNames, getSetableKeys } from '../config'
+import { internalRegister } from '../'
 
 export const setableKeys = {
   name: 'Bot display name. Default: `SlacklibBot`',
@@ -9,16 +9,11 @@ export const setableKeys = {
   debug: 'Enable debug mode. Default: `false`'
 }
 
-type ValidKey = keyof typeof setableKeys
-const keys = Object.keys(setableKeys) as ValidKey[]
-
-register(
+internalRegister(
   'set',
-  `Update configuration. Available keys: ${keys.join(
-    ', '
-  )}.\n Usage: set [key] [...value].\n For info on the keys, use \`help\` with no parameters.`,
+  `Update configuration.\n Usage: set [key] [...value].\n For info on the keys, use \`help\` with no parameters.`,
   async (bot, message, config, params) => {
-    const key = params[0] as ValidKey
+    const key = params[0]
     const values = params.slice(1)
     const value = values.join(' ')
 
@@ -31,7 +26,7 @@ register(
       return
     }
 
-    if (key in setableKeys === false) {
+    if (getSetableKeys().includes(key) === false) {
       await bot.postMessage({
         channel: message.channel,
         text: `Invalid configuration key.\n${getHelpMessage()}`,
@@ -41,7 +36,7 @@ register(
     }
 
     try {
-      const newConfig = await setConfig(key, value)
+      const newConfig = await setConfig(key as any, value)
       await bot.postMessage({
         channel: message.channel,
         text: `Successfully updated *${key}*`,
@@ -57,34 +52,43 @@ register(
   }
 )
 
-register('get', `Get the value of a configuration key`, async (bot, message, config, params) => {
-  const key = params[0]
-  const additionalKeys = Object.keys(config).filter(key => {
-    return key !== 'token' && key !== 'defaultParams'
-  })
+internalRegister(
+  'get',
+  `Get the value of a configuration key`,
+  async (bot, message, config, params) => {
+    const key = params[0]
+    const additionalKeys = Object.keys(config).filter(key => {
+      return key !== 'token' && key !== 'defaultParams'
+    })
 
-  const availableKeys = Object.keys(setableKeys).concat(...additionalKeys)
-  if (availableKeys.includes(key)) {
-    const value = JSON.stringify((getConfig() as any)[key], null, 2)
-    bot.postMessage({
+    const privateKeys = getPrivateConfigKeyNames()
+    const availableKeys = Object.keys(setableKeys)
+      .concat(...additionalKeys)
+      .filter(key => !privateKeys.includes(key))
+
+    const uniqueKeys = new Set<string>()
+    for (const key of availableKeys) {
+      uniqueKeys.add(key)
+    }
+
+    if (availableKeys.includes(key)) {
+      const value = JSON.stringify((getConfig() as any)[key], null, 2)
+      bot.postMessage({
+        channel: message.channel,
+        text: `*${key}*:\n\`\`\`\n${value}\n\`\`\``,
+        ...config.defaultParams
+      })
+      return
+    }
+
+    await bot.postMessage({
       channel: message.channel,
-      text: `*${key}*:\n\`\`\`\n${value}\n\`\`\``,
+      text: `Available keys: \`${Array.from(uniqueKeys).join(', ')}\``,
       ...config.defaultParams
     })
-    return
   }
-
-  await bot.postMessage({
-    channel: message.channel,
-    text: `Available keys: ${availableKeys}`,
-    ...config.defaultParams
-  })
-})
+)
 
 function getHelpMessage() {
-  const lines: string[] = []
-  for (const key in setableKeys) {
-    lines.push(`*${key}*: ${(setableKeys as any)[key]}`)
-  }
-  return lines.join('\n')
+  return `Available keys: \`${getSetableKeys().join(', ')}\``
 }

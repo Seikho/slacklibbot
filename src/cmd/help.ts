@@ -1,6 +1,7 @@
-import { register, getDescriptions } from './'
+import { getDescriptions } from './'
+import { internalRegister } from '../'
 
-register('help', `View this message`, async (bot, message, config) => {
+internalRegister('help', `View this message`, async (bot, message, config) => {
   const cmds = getDescriptions()
   const response = cmds.map(cmd => `*${cmd.command}*: ${cmd.desc}`).join('\n')
   bot.postMessage({

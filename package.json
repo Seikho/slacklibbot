@@ -1,15 +1,20 @@
 {
   "name": "slacklibbot",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Slack Bot framework",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rimraf dist/ types/",
     "build": "yarn run clean && tsc"
   },
   "typings": "types/index.d.ts",
-  "keywords": ["slack", "bot", "framework", "typescript"],
+  "keywords": [
+    "slack",
+    "bot",
+    "framework",
+    "typescript"
+  ],
   "author": "Carl Winkler",
   "license": "MIT",
   "devDependencies": {
