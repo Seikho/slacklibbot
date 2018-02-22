@@ -128,3 +128,26 @@ register('my-command', 'This will appear when help is caled', (bot, msg, cfg, pa
   }, )
 })
 ```
+
+## Helper functions
+
+### readMessage
+This allows you to write synchronous looking code that waits for a message
+
+```ts
+import { register, readMessage } from 'slacklibbot'
+
+// Signature
+// Users namespace is available from the library 'slacklib'
+function register(bot: SlackClient, user: Users.User, timeoutMsg: number): Promise<string>
+
+// Example
+register('my-command', 'My command description', (bot, msg, cfg) => {
+  const msgCfg = { channel: bot.channel, ...cfg.defaultParams }
+  await bot.postMessage({ ...msgCfg, text: 'Please respond:' })
+
+  const response = await readMessage(bot, msg.user, 10000)
+  await bot.postMessage({ ...msgCfg, text: `Thanks for your response: ${response}` })
+})
+
+```
