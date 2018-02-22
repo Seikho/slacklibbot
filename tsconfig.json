@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "./types",
-    "outDir": "./src"
+    "outDir": "./dist"
   },
   "exclude": ["types/**/*.ts"]
 }
