@@ -158,17 +158,25 @@ This allows you to write synchronous looking code that waits for a message
 ```ts
 import { register, readMessage } from 'slacklibbot'
 
+export interface ReadOptions {
+  // Will only "read" messages that are directly to the bot
+  directOnly?: boolean
+
+  // Timeout in seconds
+  timeout: number
+}
+
+
 // Signature
 // Users namespace is available from the library 'slacklib'
-function register(bot: SlackClient, user: Users.User, timeoutMsg: number): Promise<string>
+function register(bot: SlackClient, user: Users.User, options: ReadOptions): Promise<string>
 
 // Example
 register('my-command', 'My command description', (bot, msg, cfg) => {
   const msgCfg = { channel: bot.channel, ...cfg.defaultParams }
   await bot.postMessage({ ...msgCfg, text: 'Please respond:' })
 
-  const user = bot.users.find(user => user.id === msg.user)
-  const response = await readMessage(bot, user, 10000)
+  const response = await readMessage(bot, msg.user, { timeout: 10 })
   await bot.postMessage({ ...msgCfg, text: `Thanks for your response: ${response}` })
 })
 

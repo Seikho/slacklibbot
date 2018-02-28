@@ -1,26 +1,35 @@
 import { SlackClient, Users, Chat } from 'slacklib'
 
+export interface ReadOptions {
+  directOnly?: boolean
+  timeout: number
+}
+
 // Read a message from the user, and return the text
 export function readMessage(
   bot: SlackClient,
-  user: Users.User,
-  timeoutMs: number
+  user: Users.User | string,
+  options: ReadOptions
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const timer = setTimeout(() => {
       reject()
       bot.removeListener('message', callback)
-    }, timeoutMs)
+    }, options.timeout * 1000)
 
     const callback = async (data: Chat.Message) => {
       const channel = data.channel || ''
       const text = (data.text || '').trim()
-      const isDirect = data.type === 'message' && channel.startsWith('D')
-      const isCommand = data.type === 'message' && text.startsWith(`<@${bot.self.id}>`)
+      const isMessage = data.type === 'message'
+      const isCorrectChannel = options.directOnly ? channel.startsWith('D') : true
 
-      if (isDirect && !isCommand && data.user === user.id) {
+      const isCommand = data.type === 'message' && text.startsWith(`<@${bot.self.id}>`)
+      const userId = typeof user === 'string' ? user : user.id
+      const isCorrectUser = data.user === userId
+
+      if (isMessage && isCorrectChannel && !isCommand && isCorrectUser) {
         bot.removeListener('message', callback)
-        resolve(parseResponse(data.text))
+        resolve(text)
         clearTimeout(timer)
         return
       }
@@ -28,13 +37,6 @@ export function readMessage(
 
     bot.on('message', callback)
   })
-}
-
-function parseResponse(text: string) {
-  return text
-    .split('\n')
-    .map(el => `> ${el}`)
-    .join('\n')
 }
 
 export function sleep(milliseconds: number) {
