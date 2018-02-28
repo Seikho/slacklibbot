@@ -23,7 +23,7 @@
     "typescript": "^2.7.2"
   },
   "dependencies": {
-    "slacklib": "^1.0.4",
+    "slacklib": "^1.1.0",
     "webscaledb": "^0.1.6"
   }
 }

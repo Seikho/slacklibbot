@@ -128,7 +128,6 @@ E.g. If the bot's username (configured via the Slack Bot customisation user inte
 ## Command Registration
 
 ### RegisterCallback
-`SlackClient` and `Chat.Message` are from the package `'slacklib'`
 
 ```ts
 type RegisterCallback = (bot: SlackClient, message: Chat.Message, config: Config, params: string[])
@@ -168,7 +167,6 @@ export interface ReadOptions {
 
 
 // Signature
-// Users namespace is available from the library 'slacklib'
 function register(bot: SlackClient, user: Users.User, options: ReadOptions): Promise<string>
 
 // Example
