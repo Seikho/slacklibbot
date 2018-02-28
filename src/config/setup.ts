@@ -84,8 +84,6 @@ export async function initialiseConfig(config: any) {
   if (!raw.token) {
     throw new Error('ConfigError: Token is not configured')
   }
-
-  await backupAsync(config)
 }
 
 export type DefaultConfig = typeof defaultConfig
