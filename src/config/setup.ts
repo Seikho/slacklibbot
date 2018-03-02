@@ -79,11 +79,11 @@ export async function initialiseConfig(config: any) {
     await backupAsync({ token: process.env.SLACK_TOKEN || '', ...defaultConfig, ...config })
   }
 
-  const raw = await restoreAsync()
-  if (!raw.token) {
+  const currentConfig = await restoreAsync()
+  if (!currentConfig.token) {
     throw new Error('ConfigError: Token is not configured')
   }
-  await backupAsync(config)
+  await backupAsync({ ...config, ...currentConfig })
 }
 
 export type DefaultConfig = typeof defaultConfig
