@@ -75,16 +75,15 @@ export async function initialiseConfig(config: any) {
   try {
     fs.statSync(DB_NAME)
   } catch (ex) {
-    fs.writeFileSync(
-      DB_NAME,
-      JSON.stringify({ token: process.env.SLACK_TOKEN || '', ...config, ...defaultConfig }, null, 2)
-    )
+    fs.writeFileSync(DB_NAME, '{}')
+    await backupAsync({ token: process.env.SLACK_TOKEN || '', ...defaultConfig, ...config })
   }
 
   const raw = await restoreAsync()
   if (!raw.token) {
     throw new Error('ConfigError: Token is not configured')
   }
+  await backupAsync(config)
 }
 
 export type DefaultConfig = typeof defaultConfig

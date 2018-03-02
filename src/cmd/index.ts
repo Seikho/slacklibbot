@@ -43,7 +43,11 @@ export async function dispatch(bot: SlackClient, msg: Chat.Message, text: string
     })
 
     const user = bot.users.find(user => user.id === msg.user)
-    console.error(`[${user!.name}/${msg.type}] Unrecognized command: ${cmd}: ${msg.text}`)
+    console.error(
+      `[${user!.name}/${msg.type}/${msg.subtype || 'no subtype'}] Unrecognized command: ${cmd}: ${
+        msg.text
+      }`
+    )
     return
   }
 

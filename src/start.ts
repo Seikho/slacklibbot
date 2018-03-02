@@ -31,7 +31,7 @@ export async function start(): Promise<SlackClient> {
   return _bot
 }
 
-export async function getBot() {
+export async function getBot(): Promise<SlackClient> {
   await botReady
   return _bot
 }
