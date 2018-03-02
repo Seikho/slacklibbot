@@ -58,7 +58,8 @@ function parseConfig<TConfig>(rawConfig: db.Config) {
 function setConfig<TConfig>() {
   const setter = async (key: keyof (TConfig & DefaultConfig), value: any) => {
     const originalValue = db.get(key)
-    const parseReqd = typeof originalValue !== 'string' && typeof value === 'string'
+    const parseReqd =
+      originalValue !== undefined && typeof originalValue !== 'string' && typeof value === 'string'
     const valueToStore = parseReqd ? JSON.parse(value) : value
     db.set(key, valueToStore)
     await backupAsync()
