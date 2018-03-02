@@ -76,7 +76,7 @@ export async function initialiseConfig(config: any) {
   } catch (ex) {
     fs.writeFileSync(
       DB_NAME,
-      JSON.stringify({ token: process.env.SLACK_TOKEN || '', ...defaultConfig, ...config }, null, 2)
+      JSON.stringify({ token: process.env.SLACK_TOKEN || '', ...config, ...defaultConfig }, null, 2)
     )
   }
 
