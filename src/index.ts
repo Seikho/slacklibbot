@@ -1,6 +1,6 @@
 export { setup } from './config'
 export { readMessage } from './read'
-export { start } from './start'
+export { start, getBot } from './start'
 export * from './cmd'
 export * from 'slacklib'
 

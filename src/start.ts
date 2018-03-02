@@ -3,6 +3,8 @@ import { dispatch } from './cmd'
 import { SlackClient, Chat } from 'slacklib'
 
 let _bot: any = null
+let botResolveFn: Function
+let botReady = new Promise(resolve => (botResolveFn = resolve))
 
 export async function start(): Promise<SlackClient> {
   if (_bot) {
@@ -25,6 +27,12 @@ export async function start(): Promise<SlackClient> {
   bot.setMaxListeners(Infinity)
 
   _bot = bot
+  botResolveFn()
+  return _bot
+}
+
+export async function getBot() {
+  await botReady
   return _bot
 }
 
