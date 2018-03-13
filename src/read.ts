@@ -18,16 +18,20 @@ export function readMessage(
     }, options.timeout * 1000)
 
     const callback = async (data: Chat.Message) => {
+      const isMessage = data.type === 'message'
+      if (!isMessage) {
+        return
+      }
+
       const channel = data.channel || ''
       const text = (data.text || '').trim()
-      const isMessage = data.type === 'message'
       const isCorrectChannel = options.directOnly ? channel.startsWith('D') : true
 
       const isCommand = data.type === 'message' && text.startsWith(`<@${bot.self.id}>`)
       const userId = typeof user === 'string' ? user : user.id
       const isCorrectUser = data.user === userId
 
-      if (isMessage && isCorrectChannel && !isCommand && isCorrectUser) {
+      if (isCorrectChannel && !isCommand && isCorrectUser) {
         bot.removeListener('message', callback)
         resolve(text)
         clearTimeout(timer)
