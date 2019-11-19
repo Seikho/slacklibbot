@@ -2,6 +2,7 @@ import * as db from 'webscaledb'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as process from 'process'
+import * as aws from 'aws-sdk'
 
 const DB_NAME = path.join(process.cwd(), 'database', 'config.json')
 
@@ -62,7 +63,7 @@ function setConfig<TConfig>() {
       originalValue !== undefined && typeof originalValue !== 'string' && typeof value === 'string'
     const valueToStore = parseReqd ? JSON.parse(value) : value
     db.set(key, valueToStore)
-    await backupAsync()
+    await backupToDynamoAsync()
     const newConfig = parseConfig(db.get())
     return newConfig as TConfig & DefaultConfig
   }
@@ -79,11 +80,11 @@ export async function initialiseConfig(config: any) {
     await backupAsync({ token: process.env.SLACK_TOKEN || '', ...defaultConfig, ...config })
   }
 
-  const currentConfig = await restoreAsync()
+  const currentConfig = await restoreFromDynamoAsync()
   if (!currentConfig.token) {
     throw new Error('ConfigError: Token is not configured')
   }
-  await backupAsync({ ...config, ...currentConfig })
+  await backupToDynamoAsync({ ...config, ...currentConfig })
 }
 
 export type DefaultConfig = typeof defaultConfig
@@ -97,18 +98,90 @@ export const defaultConfig = Object.freeze({
   log: false
 })
 
+// @ts-ignore TS6133
+function backupToDynamoAsync<TConfig>(cfg?: TConfig) {
+  if (cfg) {
+    for (const key in cfg) {
+      db.set(key, (cfg as any)[key])
+    }
+  }
+  return new Promise<void>((resolve, reject) => {
+    const docClient = new aws.DynamoDB.DocumentClient()
+    const params = {
+      TableName: process.env.SLACKLIBBOT_TABLE_NAME!,
+      Item: {
+        Id: process.env.SLACKLIBBOT_CONFIG_NAME!,
+        cfg: (db.get() || {}) as {}
+      }
+    }
+    console.debug({ msg: 'backing up to dynamodb', params: params })
+    docClient.put(params, function(err, _) {
+      if (err) {
+        console.error({ msg: 'error backing up to dynamodb', err: err })
+        return reject(err)
+      } else {
+        return resolve()
+      }
+    })
+  })
+}
+
+// @ts-ignore TS6133
+function restoreFromDynamoAsync() {
+  return new Promise<db.Config>((resolve, reject) => {
+    const docClient = new aws.DynamoDB.DocumentClient()
+    const params = {
+      TableName: process.env.SLACKLIBBOT_TABLE_NAME!,
+      KeyConditionExpression: 'Id = :i',
+      ExpressionAttributeValues: {
+        ':i': process.env.SLACKLIBBOT_CONFIG_NAME!
+      }
+    }
+    docClient.query(params, function(err, data) {
+      if (err) {
+        console.error({ msg: 'error restoring from dynamodb', err: err })
+        return reject(err)
+      } else {
+        const { Items } = data
+        if (Items) {
+          console.debug({ msg: 'got data from dynamodb', data: data })
+          try {
+            const cfg = Items[0].cfg
+            for (const key in cfg) {
+              db.set(key, (cfg as any)[key])
+            }
+            return resolve(cfg)
+          } catch (e) {
+            console.error({ msg: 'unhandled exception restoring from dynamodb', e: e })
+            return reject(e)
+          }
+        }
+
+        console.warn({
+          msg:
+            'fell through when restoring from dynamo.' +
+            ' This is usually caused by an empty dynamodb table, such as on first run.' +
+            ' However, if it happens frequently, then there is probably a bug in the code.'
+        })
+        return resolve({})
+      }
+    })
+  })
+}
+
+// @ts-ignore TS6133
 function restoreAsync() {
   return new Promise<db.Config>((resolve, reject) => {
     db.restore(DB_NAME, (err, raw) => {
       if (err) {
         return reject(err)
       }
-
       return resolve(raw)
     })
   })
 }
 
+// @ts-ignore TS6133
 function backupAsync<TConfig>(cfg?: TConfig) {
   if (cfg) {
     for (const key in cfg) {
