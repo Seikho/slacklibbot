@@ -106,7 +106,9 @@ function backupToDynamoAsync<TConfig>(cfg?: TConfig) {
     }
   }
   return new Promise<void>((resolve, reject) => {
-    const docClient = new aws.DynamoDB.DocumentClient()
+    const docClient = new aws.DynamoDB.DocumentClient({
+      endpoint: process.env.DYNAMODB_ENDPOINT
+    })
     const params = {
       TableName: process.env.SLACKLIBBOT_TABLE_NAME!,
       Item: {
@@ -129,7 +131,9 @@ function backupToDynamoAsync<TConfig>(cfg?: TConfig) {
 // @ts-ignore TS6133
 function restoreFromDynamoAsync() {
   return new Promise<db.Config>((resolve, reject) => {
-    const docClient = new aws.DynamoDB.DocumentClient()
+    const docClient = new aws.DynamoDB.DocumentClient({
+      endpoint: process.env.DYNAMODB_ENDPOINT
+    })
     const params = {
       TableName: process.env.SLACKLIBBOT_TABLE_NAME!,
       KeyConditionExpression: 'Id = :i',
