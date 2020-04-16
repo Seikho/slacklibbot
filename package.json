@@ -23,6 +23,7 @@
     "typescript": "^2.7.2"
   },
   "dependencies": {
+    "aws-sdk": "^2.574.0",
     "slacklib": "^1.2.1",
     "webscaledb": "^0.1.6"
   }
